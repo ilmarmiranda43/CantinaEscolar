@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CantinaEscolar</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/CantinaEscolar.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">🎓 Cantina Escolar</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    
+                    @using Microsoft.AspNetCore.Identity
+                    @inject SignInManager<CantinaEscolar.Models.ApplicationUser> SignInManager
+                    @inject UserManager<CantinaEscolar.Models.ApplicationUser> UserManager
+
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        <ul class="navbar-nav ms-auto">
+                            <li class="nav-item">
+                                <a class="nav-link text-info" asp-controller="Alunos" asp-action="Index">Alunos</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-info" asp-controller="Responsaveis" asp-action="Index">Responsáveis</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-info" asp-controller="Compras" asp-action="Index">Compras</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-info" asp-controller="Relatorios" asp-action="Index">Relatórios</a>
+                            </li>
+                            @* <li class="nav-item">
+                                <a class="nav-link" asp-controller="Home" asp-action="Privacy">Privacidade</a>
+                            </li> *@
+
+                            @if (SignInManager.IsSignedIn(User) && (User.IsInRole("Admin") || User.IsInRole("Prop")))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-info" asp-controller="Account" asp-action="Usuarios">Usuários</a>
+                                </li>
+                            }
+
+
+                            @if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-info" asp-controller="Account" asp-action="Register">Novo Usuário (Admin)</a>
+                                </li>
+                            }
+                            @if (SignInManager.IsSignedIn(User) && User.IsInRole("Prop"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-info" asp-controller="Account" asp-action="Register">Novo Usuário (Prop)</a>
+                                </li>
+                            }
+
+                            @if (SignInManager.IsSignedIn(User))
+                            {
+                                var user = await UserManager.GetUserAsync(User);
+                                string nomeUsuario = user?.Nome ?? "Usuário";
+
+                                <li class="nav-item">
+                                    <span class="nav-link text-white">Olá, @nomeUsuario</span>
+                                </li>
+                                <li class="nav-item">
+                                    <form asp-controller="Account" asp-action="Logout" method="post" class="form-inline">
+                                        <button type="submit" class="nav-link btn btn-link text-white">Sair</button>
+                                    </form>
+                                </li>
+                            }
+
+                        </ul>
+                    }
+                    
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2025 - Cantina da Tia Ná
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

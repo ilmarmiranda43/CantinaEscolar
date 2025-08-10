@@ -1,0 +1,21 @@
+﻿@model List<Aluno>
+
+<table>
+    <thead>
+        <tr>
+            <th>Aluno</th>
+            <th>Responsável</th>
+            <th>Saldo Disponível</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var aluno in Model)
+        {
+            <tr>
+                <td>@aluno.Nome</td>
+                <td>@aluno.Responsavel.Nome</td>
+                <td>@aluno.ValorDisponivel.ToString("C")</td>
+            </tr>
+        }
+    </tbody>
+</table>

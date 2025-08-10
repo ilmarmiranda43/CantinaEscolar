@@ -1,0 +1,36 @@
+﻿@model List<CantinaEscolar.Models.UsuarioViewModel>
+
+<h2>Usuários Cadastrados</h2>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-primary">
+        <tr>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Telefone</th>
+            <th>RA</th>
+            <th>Perfil</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var usuario in Model)
+        {
+            <tr>
+                <td>@usuario.Nome</td>
+                <td>@usuario.Email</td>
+                <td>@usuario.Fone</td>
+                <td>@usuario.RA</td>
+                <td>@string.Join(", ", usuario.Roles)</td>
+                <td>
+                    <a asp-action="Editar" asp-route-id="@usuario.Id" class="btn btn-sm btn-warning me-1">Editar</a>
+
+                    <form asp-action="Excluir" asp-route-id="@usuario.Id" method="post" style="display:inline;"
+                          onsubmit="return confirm('Tem certeza que deseja excluir este usuário?');">
+                        <button type="submit" class="btn btn-sm btn-danger">Excluir</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

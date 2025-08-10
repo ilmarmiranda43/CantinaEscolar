@@ -1,0 +1,15 @@
+﻿@model CantinaEscolar.Models.UsuarioViewModel
+
+@{
+    ViewData["Title"] = "Excluir Usuário";
+}
+
+<h2>Confirmar Exclusão</h2>
+
+<p>Tem certeza que deseja excluir o usuário <strong>@Model.Nome</strong>?</p>
+
+<form asp-action="Excluir" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Excluir</button>
+    <a asp-action="Usuarios" class="btn btn-secondary">Cancelar</a>
+</form>

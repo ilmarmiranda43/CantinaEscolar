@@ -1,0 +1,57 @@
+﻿@model UsuarioViewModel
+
+@{
+    ViewData["Title"] = "Editar Usuário";
+}
+
+<h2>Editar Usuário</h2>
+
+<form asp-action="Editar" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="form-group">
+        <label asp-for="Nome"></label>
+        <input asp-for="Nome" class="form-control" />
+        <span asp-validation-for="Nome" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="RA"></label>
+        <input asp-for="RA" class="form-control" />
+        <span asp-validation-for="RA" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Email"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Fone"></label>
+        <input asp-for="Fone" class="form-control" id="PhoneNumber" type="tel" />
+        <span asp-validation-for="Fone" class="text-danger"></span>
+    </div>
+
+    @* <div class="form-group mb-4">
+        <label asp-for="Roles"></label>
+        <input asp-for="Roles" class="form-control" readonly />
+        <small class="form-text text-muted">O perfil não pode ser alterado por esta tela.</small>
+    </div> *@
+
+    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+    <a asp-action="Usuarios" class="btn btn-secondary">Cancelar</a>
+</form>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#PhoneNumber').mask('(00) 00000-0000');
+        });
+    </script>
+}

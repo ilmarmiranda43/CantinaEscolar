@@ -1,0 +1,31 @@
+﻿@model Aluno
+
+<h2 class="mb-4">Cadastrar Novo Aluno</h2>
+
+<form asp-action="Create" method="post" class="border p-4 rounded shadow-sm bg-light">
+    <div class="mb-3">
+        <label asp-for="Nome" class="form-label">Nome:</label>
+        <input asp-for="Nome" class="form-control" />
+        <span asp-validation-for="Nome" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="DataNascimento" class="form-label">Data de Nascimento:</label>
+        <input asp-for="DataNascimento" type="date" class="form-control" />
+        <span asp-validation-for="DataNascimento" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Serie" class="form-label">Série:</label>
+        <input asp-for="Serie" class="form-control" />
+        <span asp-validation-for="Serie" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ResponsavelId" class="form-label">Responsável:</label>
+        <select asp-for="ResponsavelId" asp-items="ViewBag.Responsaveis" class="form-select"></select>
+        <span asp-validation-for="ResponsavelId" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Cadastrar</button>
+</form>

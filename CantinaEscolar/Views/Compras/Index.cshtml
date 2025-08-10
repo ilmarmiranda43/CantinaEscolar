@@ -1,0 +1,26 @@
+﻿@model List<Compra>
+
+<h2>Histórico de Compras</h2>
+<a asp-action="Create">Registrar Nova Compra</a>
+
+<table>
+    <thead>
+        <tr>
+            <th>Data</th>
+            <th>Aluno</th>
+            <th>Descrição</th>
+            <th>Valor</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var compra in Model)
+        {
+            <tr>
+                <td>@compra.Data.ToShortDateString()</td>
+                <td>@compra.Aluno?.Nome</td>
+                <td>@compra.Descricao</td>
+                <td>@compra.Valor.ToString("C")</td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,13 @@
+﻿@model Compra
+<form asp-action="Create" method="post">
+    <label>Descrição:</label>
+    <input asp-for="Descricao" />
+
+    <label>Valor:</label>
+    <input asp-for="Valor" />
+
+    <label>Aluno:</label>
+    <select asp-for="AlunoId" asp-items="ViewBag.Alunos"></select>
+
+    <button type="submit">Registrar Compra</button>
+</form>

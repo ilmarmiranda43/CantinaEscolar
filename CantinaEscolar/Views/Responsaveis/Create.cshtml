@@ -1,0 +1,58 @@
+﻿@model Responsavel
+
+<h2 class="mb-4">Cadastrar Novo Responsável</h2>
+
+<form asp-action="Create" class="border p-4 rounded shadow-sm bg-light">
+    <div class="mb-3">
+        <label asp-for="Nome" class="form-label">Nome:</label>
+        <input asp-for="Nome" class="form-control" />
+        <span asp-validation-for="Nome" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ValorParaCantina" class="form-label">Valor para Cantina:</label>
+        <input asp-for="ValorParaCantina" type="number" step="0.01" class="form-control" />
+        <span asp-validation-for="ValorParaCantina" class="text-danger"></span>
+    </div>
+
+    <!-- Campo de telefone -->
+    <div class="mb-3">
+        <label asp-for="Fone" class="form-label">Telefone:</label>
+        <input asp-for="Fone" class="form-control telefone" />
+        <span asp-validation-for="Fone" class="text-danger"></span>
+    </div>
+
+    <!-- Script da biblioteca Inputmask -->
+    <script src="https://cdn.jsdelivr.net/npm/inputmask@5.0.8/dist/inputmask.min.js"></script>
+
+    <!-- Aplicação da máscara -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            Inputmask({"mask": "(99) 99999-9999"}).mask(".telefone");
+        });
+    </script>
+
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label">Email:</label>
+        <input asp-for="Email" type="email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="DiaPgto" class="form-label">Dia do Pagamento:</label>
+        <input asp-for="DiaPgto" type="number" min="1" max="31" class="form-control" />
+        <span asp-validation-for="DiaPgto" class="text-danger"></span>
+    </div>
+
+
+    <div class="d-flex justify-content-between">
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

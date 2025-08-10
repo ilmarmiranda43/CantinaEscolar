@@ -1,0 +1,27 @@
+﻿@model Responsavel
+
+<h2 class="mb-4 text-danger">Excluir Responsável</h2>
+
+<div class="border p-4 rounded shadow-sm bg-light">
+    <p>Tem certeza que deseja excluir o responsável <strong>@Model.Nome</strong>?</p>
+
+    <dl class="row">
+        <dt class="col-sm-3">Valor para Cantina:</dt>
+        <dd class="col-sm-9">@Model.ValorParaCantina.ToString("C")</dd>
+
+        <dt class="col-sm-3">Telefone:</dt>
+        <dd class="col-sm-9">@Model.Fone</dd>
+
+        <dt class="col-sm-3">Email:</dt>
+        <dd class="col-sm-9">@Model.Email</dd>
+
+        <dt class="col-sm-3">Dia do Pagamento:</dt>
+        <dd class="col-sm-9">@Model.DiaPgto</dd>
+    </dl>
+
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+    </form>
+</div>

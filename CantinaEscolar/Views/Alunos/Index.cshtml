@@ -1,0 +1,30 @@
+﻿@model List<Aluno>
+
+<h2 class="mb-4">Lista de Alunos</h2>
+<a asp-action="Create" class="btn btn-success mb-3">Cadastrar Novo Aluno</a>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Nome</th>
+                <th>Data de Nascimento</th>
+                <th>Série</th>
+                <th>Responsável</th>
+                <th>Saldo Disponível</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var aluno in Model)
+            {
+                <tr>
+                    <td>@aluno.Nome</td>
+                    <td>@aluno.DataNascimento.ToString("dd/MM/yyyy")</td>
+                    <td>@aluno.Serie</td>
+                    <td>@aluno.Responsavel?.Nome</td>
+                    <td>@aluno.ValorDisponivel.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
