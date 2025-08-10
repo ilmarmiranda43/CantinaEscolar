@@ -1,0 +1,43 @@
+﻿@model CantinaEscolar.Models.Venda
+@{
+    ViewData["Title"] = "Detalhes da Venda";
+}
+<h1>Detalhes da Venda #@Model.Id</h1>
+
+<div class="mb-3">
+    <strong>Data:</strong> @Model.DataVenda.ToString("dd/MM/yyyy HH:mm")<br />
+    <strong>Cliente:</strong> @Model.ClienteNome<br />
+    <strong>Forma de Pagamento:</strong> @Model.FormaPagamento<br />
+</div>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Produto</th>
+            <th>Qtd</th>
+            <th>Preço</th>
+            <th>Subtotal</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var i in Model.Itens)
+        {
+            <tr>
+                <td>@i.Produto?.Nome</td>
+                <td>@i.Quantidade</td>
+                <td>@i.PrecoUnitario.ToString("C")</td>
+                <td>@(i.Quantidade* i.PrecoUnitario).ToString("C")</td>
+            </tr>
+        }
+    </tbody>
+    <tfoot>
+        <tr>
+            <th colspan="3" class="text-end">Total</th>
+            <th>@Model.Total.ToString("C")</th>
+        </tr>
+    </tfoot>
+</table>
+
+<p>
+    <a asp-action="Index" class="btn btn-secondary">Voltar</a>
+</p>

@@ -1,0 +1,108 @@
+﻿@model CantinaEscolar.ViewModels.VendaCreateViewModel
+@{
+    ViewData["Title"] = "Nova Venda";
+}
+<h1>Nova Venda</h1>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="row g-3">
+        <div class="col-md-5">
+            <label asp-for="ClienteNome" class="form-label"></label>
+            <input asp-for="ClienteNome" class="form-control" />
+            <span asp-validation-for="ClienteNome" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="FormaPagamento" class="form-label"></label>
+            <input asp-for="FormaPagamento" class="form-control" placeholder="Dinheiro, Cartão, PIX" />
+            <span asp-validation-for="FormaPagamento" class="text-danger"></span>
+        </div>
+    </div>
+
+    <hr />
+
+    <h5>Itens</h5>
+    <table class="table" id="itens-table">
+        <thead>
+            <tr>
+                <th style="width:60%">Produto</th>
+                <th style="width:20%">Quantidade</th>
+                <th style="width:20%"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Itens.Count; i++)
+            {
+                <tr>
+                    <td>
+                        <select class="form-select" name="Itens[@i].ProdutoId" required>
+                            <option value="">-- Selecione --</option>
+                            @foreach (var p in (IEnumerable<SelectListItem>)ViewBag.Produtos)
+                            {
+                                <option value="@p.Value" selected="@(Model.Itens[i].ProdutoId.ToString() == p.Value ? "selected" : null)">@p.Text</option>
+                            }
+                        </select>
+                    </td>
+                    <td>
+                        <input class="form-control" type="number" min="1" name="Itens[@i].Quantidade" value="@(Model.Itens[i].Quantidade == 0 ? 1 : Model.Itens[i].Quantidade)" required />
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-outline-danger" onclick="removerLinha(this)">Remover</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <p>
+        <button type="button" class="btn btn-outline-primary" id="add-item">Adicionar Item</button>
+    </p>
+
+    <div class="mt-3">
+        <button type="submit" class="btn btn-success">Salvar Venda</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        let indice = @Model.Itens.Count;
+
+        document.getElementById('add-item').addEventListener('click', function () {
+            const tbody = document.querySelector('#itens-table tbody');
+            const tr = document.createElement('tr');
+
+            tr.innerHTML = `
+                <td>
+                    <select class="form-select" name="Itens[${indice}].ProdutoId" required>
+                        <option value="">-- Selecione --</option>
+                        ${Array.from(document.querySelectorAll('select[name^="Itens["] option'))
+                            .map(o => o.outerHTML).slice(0,0)}
+                    </select>
+                </td>
+                <td>
+                    <input class="form-control" type="number" min="1" name="Itens[${indice}].Quantidade" value="1" required />
+                </td>
+                <td>
+                    <button type="button" class="btn btn-outline-danger" onclick="removerLinha(this)">Remover</button>
+                </td>`;
+
+            tbody.appendChild(tr);
+
+            // clona as opções do primeiro select disponível para popular o novo
+            const primeiroSelect = document.querySelector('select[name^="Itens["]');
+            if (primeiroSelect) {
+                tr.querySelector('select').innerHTML = primeiroSelect.innerHTML;
+            }
+
+            indice++;
+        });
+
+        function removerLinha(btn) {
+            const tr = btn.closest('tr');
+            tr.remove();
+        }
+    </script>
+}

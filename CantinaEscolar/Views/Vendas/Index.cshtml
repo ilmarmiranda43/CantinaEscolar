@@ -1,0 +1,42 @@
+﻿@model IEnumerable<CantinaEscolar.Models.Venda>
+@{
+    ViewData["Title"] = "Vendas";
+}
+<h1>Vendas</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Nova Venda</a>
+</p>
+
+@if (TempData["msg"] != null)
+{
+    <div class="alert alert-success">@TempData["msg"]</div>
+}
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Data</th>
+            <th>Cliente</th>
+            <th>Forma</th>
+            <th>Total</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var v in Model)
+        {
+            <tr>
+                <td>@v.Id</td>
+                <td>@v.DataVenda.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@v.ClienteNome</td>
+                <td>@v.FormaPagamento</td>
+                <td>@v.Total.ToString("C")</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@v.Id" class="btn btn-sm btn-outline-secondary">Detalhes</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
