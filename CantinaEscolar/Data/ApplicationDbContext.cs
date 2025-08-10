@@ -9,6 +9,7 @@ namespace CantinaEscolar.Data
         public DbSet<Aluno> Alunos { get; set; }
         public DbSet<Responsavel> Responsaveis { get; set; }
         public DbSet<Compra> Compras { get; set; }
+        public DbSet<Produto> Produtos => Set<Produto>();
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options) { }
