@@ -1,34 +1,42 @@
-﻿@model CantinaEscolar.ViewModels.VendaCreateViewModel
+﻿@model CantinaEscolar.ViewModels.VendaViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
 @{
-    ViewData["Title"] = "Nova Venda";
+    ViewData["Title"] = "Registrar Venda";
 }
-<h1>Nova Venda</h1>
+
+<h2>Vendas</h2>
+
+@if (!string.IsNullOrEmpty(Model.MensagemErro))
+{
+    <div class="alert alert-danger">@Model.MensagemErro</div>
+}
 
 <form asp-action="Create" method="post">
-    @Html.AntiForgeryToken()
+    <div class="mb-3">
+        <label asp-for="AlunoId" class="form-label"></label>
+        <select asp-for="AlunoId" class="form-select" asp-items="ViewBag.Alunos" id="alunoSelect"></select>
+        <span asp-validation-for="AlunoId" class="text-danger"></span>
+    </div>
 
-    <div class="row g-3">
-        <div class="col-md-5">
-            <label asp-for="ClienteNome" class="form-label"></label>
-            <input asp-for="ClienteNome" class="form-control" />
-            <span asp-validation-for="ClienteNome" class="text-danger"></span>
+    <div class="row mb-2">
+        <div class="col">
+            <strong>Limite do responsável:</strong> @Model.LimiteResponsavel.ToString("C2")
         </div>
-        <div class="col-md-3">
-            <label asp-for="FormaPagamento" class="form-label"></label>
-            <input asp-for="FormaPagamento" class="form-control" placeholder="Dinheiro, Cartão, PIX" />
-            <span asp-validation-for="FormaPagamento" class="text-danger"></span>
+        <div class="col">
+            <strong>Já consumido no mês:</strong> @Model.TotalJaConsumidoNoMes.ToString("C2")
+        </div>
+        <div class="col">
+            <strong>Disponível:</strong> <span id="limiteDisp">@Model.LimiteDisponivel.ToString("C2")</span>
         </div>
     </div>
 
-    <hr />
-
-    <h5>Itens</h5>
-    <table class="table" id="itens-table">
+    <table class="table table-striped align-middle">
         <thead>
             <tr>
-                <th style="width:60%">Produto</th>
-                <th style="width:20%">Quantidade</th>
-                <th style="width:20%"></th>
+                <th>Produto</th>
+                <th class="text-end">Preço</th>
+                <th style="width:140px" class="text-end">Quantidade</th>
+                <th class="text-end">Subtotal</th>
             </tr>
         </thead>
         <tbody>
@@ -36,73 +44,63 @@
             {
                 <tr>
                     <td>
-                        <select class="form-select" name="Itens[@i].ProdutoId" required>
-                            <option value="">-- Selecione --</option>
-                            @foreach (var p in (IEnumerable<SelectListItem>)ViewBag.Produtos)
-                            {
-                                <option value="@p.Value" selected="@(Model.Itens[i].ProdutoId.ToString() == p.Value ? "selected" : null)">@p.Text</option>
-                            }
-                        </select>
+                        @Model.Itens[i].ProdutoNome
+                        <input type="hidden" asp-for="Itens[@i].ProdutoId" />
+                        <input type="hidden" asp-for="Itens[@i].ProdutoNome" />
+                        <input type="hidden" asp-for="Itens[@i].Preco" />
                     </td>
-                    <td>
-                        <input class="form-control" type="number" min="1" name="Itens[@i].Quantidade" value="@(Model.Itens[i].Quantidade == 0 ? 1 : Model.Itens[i].Quantidade)" required />
+                    <td class="text-end">@Model.Itens[i].Preco.ToString("C2")</td>
+                    <td class="text-end">
+                        <input class="form-control text-end quantidade" asp-for="Itens[@i].Quantidade" type="number" min="0" value="0" />
                     </td>
-                    <td>
-                        <button type="button" class="btn btn-outline-danger" onclick="removerLinha(this)">Remover</button>
-                    </td>
+                    <td class="text-end subtotal">R$ 0,00</td>
                 </tr>
             }
         </tbody>
+        <tfoot>
+            <tr>
+                <th colspan="3" class="text-end">Total da venda:</th>
+                <th class="text-end" id="totalVenda">R$ 0,00</th>
+            </tr>
+        </tfoot>
     </table>
 
-    <p>
-        <button type="button" class="btn btn-outline-primary" id="add-item">Adicionar Item</button>
-    </p>
-
-    <div class="mt-3">
-        <button type="submit" class="btn btn-success">Salvar Venda</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
-    </div>
+    <button type="submit" class="btn btn-primary">Confirmar venda</button>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Cancelar</a>
 </form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        let indice = @Model.Itens.Count;
+        const fmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
-        document.getElementById('add-item').addEventListener('click', function () {
-            const tbody = document.querySelector('#itens-table tbody');
-            const tr = document.createElement('tr');
+        function recalcular() {
+            let total = 0;
+            document.querySelectorAll('tbody tr').forEach(tr => {
+                const preco = parseFloat(tr.querySelector('input[name$=".Preco"]').value.replace(',', '.'));
+                const qtdEl = tr.querySelector('.quantidade');
+                const qtd = parseInt(qtdEl.value || '0');
+                const sub = (qtd * preco) || 0;
+                tr.querySelector('.subtotal').textContent = fmt.format(sub);
+                total += sub;
+            });
+            document.getElementById('totalVenda').textContent = fmt.format(total);
+        }
 
-            tr.innerHTML = `
-                <td>
-                    <select class="form-select" name="Itens[${indice}].ProdutoId" required>
-                        <option value="">-- Selecione --</option>
-                        ${Array.from(document.querySelectorAll('select[name^="Itens["] option'))
-                            .map(o => o.outerHTML).slice(0,0)}
-                    </select>
-                </td>
-                <td>
-                    <input class="form-control" type="number" min="1" name="Itens[${indice}].Quantidade" value="1" required />
-                </td>
-                <td>
-                    <button type="button" class="btn btn-outline-danger" onclick="removerLinha(this)">Remover</button>
-                </td>`;
-
-            tbody.appendChild(tr);
-
-            // clona as opções do primeiro select disponível para popular o novo
-            const primeiroSelect = document.querySelector('select[name^="Itens["]');
-            if (primeiroSelect) {
-                tr.querySelector('select').innerHTML = primeiroSelect.innerHTML;
-            }
-
-            indice++;
+        document.querySelectorAll('.quantidade').forEach(el => {
+            el.addEventListener('input', recalcular);
         });
 
-        function removerLinha(btn) {
-            const tr = btn.closest('tr');
-            tr.remove();
-        }
+        // Atualiza limite disponível ao trocar aluno
+        document.getElementById('alunoSelect').addEventListener('change', async (e) => {
+            const alunoId = e.target.value;
+            if (!alunoId) return;
+            const resp = await fetch(`@Url.Action("LimiteDisponivel", "Vendas")?alunoId=${alunoId}`);
+            const data = await resp.json();
+            document.getElementById('limiteDisp').textContent = fmt.format(data.disponivel);
+        });
+
+        // cálculo inicial
+        recalcular();
     </script>
 }

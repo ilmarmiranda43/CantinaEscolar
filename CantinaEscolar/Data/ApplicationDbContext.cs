@@ -14,6 +14,10 @@ namespace CantinaEscolar.Data
         public DbSet<Compra> Compras { get; set; }
 
         public DbSet<Produto> Produtos => Set<Produto>();
+        public DbSet<CompraItem> CompraItens { get; set; }  // novo
+        public ICollection<CompraItem> Itens { get; set; } = new List<CompraItem>();
+
+
         public DbSet<Venda> Vendas => Set<Venda>();
         public DbSet<VendaItem> VendasItens => Set<VendaItem>();
 

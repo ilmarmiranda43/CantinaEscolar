@@ -1,5 +1,6 @@
 using CantinaEscolar.Data;
 using CantinaEscolar.Models;
+using CantinaEscolar.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
@@ -22,6 +23,9 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login"; // ou o caminho correto do seu controller de login
 });
+
+// REGISTRO DO SERVICE DE VENDAS
+builder.Services.AddScoped<IVendaService, VendaService>();
 
 var app = builder.Build();
 

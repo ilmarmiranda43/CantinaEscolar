@@ -39,9 +39,9 @@ namespace CantinaEscolar.Controllers
                 return View(compra);
             }
 
-            if (aluno.ValorDisponivel >= compra.Valor)
+            if (aluno.ValorDisponivel >= compra.ValorTotal)
             {
-                aluno.ValorDisponivel -= compra.Valor;
+                aluno.ValorDisponivel -= compra.ValorTotal;
                 _context.Compras.Add(compra);
                 await _context.SaveChangesAsync();
             }

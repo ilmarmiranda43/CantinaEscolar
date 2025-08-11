@@ -1,25 +1,31 @@
-﻿@model List<Compra>
+﻿@model IEnumerable<CantinaEscolar.Models.Compra>
+@{
+    ViewData["Title"] = "Compras";
+}
 
-<h2>Histórico de Compras</h2>
-<a asp-action="Create">Registrar Nova Compra</a>
+<h2>Compras</h2>
 
-<table>
+<table class="table table-striped">
     <thead>
         <tr>
             <th>Data</th>
             <th>Aluno</th>
-            <th>Descrição</th>
-            <th>Valor</th>
+            <th class="text-end">Valor Total</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var compra in Model)
+        @foreach (var item in Model)
         {
             <tr>
-                <td>@compra.Data.ToShortDateString()</td>
-                <td>@compra.Aluno?.Nome</td>
-                <td>@compra.Descricao</td>
-                <td>@compra.Valor.ToString("C")</td>
+                <td>@item.Data.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@item.Aluno?.Nome</td>
+                <td class="text-end">@item.ValorTotal.ToString("C2")</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.Id">Detalhes</a> |
+                    <a asp-action="Edit" asp-route-id="@item.Id">Editar</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Excluir</a>
+                </td>
             </tr>
         }
     </tbody>
