@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Mvc.Rendering
 @{
     ViewData["Title"] = "Registrar Venda";
+    var produtosJson = (string)ViewBag.ProdutosJson;
 }
 
 <h2>Vendas</h2>
@@ -14,46 +15,63 @@
 <form asp-action="Create" method="post">
     <div class="mb-3">
         <label asp-for="AlunoId" class="form-label"></label>
-        <select asp-for="AlunoId" class="form-select" asp-items="ViewBag.Alunos" id="alunoSelect"></select>
+        <select asp-for="AlunoId" class="form-select" asp-items="ViewBag.Alunos" id="alunoSelect">
+            <option value="">-- selecione um aluno --</option>
+        </select>
         <span asp-validation-for="AlunoId" class="text-danger"></span>
     </div>
 
     <div class="row mb-2">
         <div class="col">
-            <strong>Limite do responsável:</strong> @Model.LimiteResponsavel.ToString("C2")
+            <strong>Limite do responsável:</strong>
+            <span id="limiteResp">@Model.LimiteResponsavel.ToString("C2")</span>
         </div>
         <div class="col">
-            <strong>Já consumido no mês:</strong> @Model.TotalJaConsumidoNoMes.ToString("C2")
+            <strong>Já consumido no mês:</strong>
+            <span id="consumidoMes">@Model.TotalJaConsumidoNoMes.ToString("C2")</span>
         </div>
         <div class="col">
-            <strong>Disponível:</strong> <span id="limiteDisp">@Model.LimiteDisponivel.ToString("C2")</span>
+            <strong>Disponível:</strong>
+            <span id="limiteDisp">@Model.LimiteDisponivel.ToString("C2")</span>
         </div>
     </div>
 
-    <table class="table table-striped align-middle">
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="m-0">Itens da venda</h5>
+        <button type="button" id="btnAdd" class="btn btn-outline-primary btn-sm">Adicionar item</button>
+    </div>
+
+    <table class="table table-striped align-middle" id="tabelaItens">
         <thead>
             <tr>
-                <th>Produto</th>
-                <th class="text-end">Preço</th>
-                <th style="width:140px" class="text-end">Quantidade</th>
-                <th class="text-end">Subtotal</th>
+                <th style="width:40%">Produto</th>
+                <th class="text-end" style="width:15%">Preço</th>
+                <th class="text-end" style="width:15%">Quantidade</th>
+                <th class="text-end" style="width:15%">Subtotal</th>
+                <th class="text-end" style="width:15%"></th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="tbodyItens">
             @for (int i = 0; i < Model.Itens.Count; i++)
             {
                 <tr>
                     <td>
-                        @Model.Itens[i].ProdutoNome
-                        <input type="hidden" asp-for="Itens[@i].ProdutoId" />
-                        <input type="hidden" asp-for="Itens[@i].ProdutoNome" />
-                        <input type="hidden" asp-for="Itens[@i].Preco" />
+                        <select asp-for="Itens[@i].ProdutoId" class="form-select produto-select" asp-items="ViewBag.Produtos">
+                            <option value="">-- selecione um produto --</option>
+                        </select>
+                        <span asp-validation-for="Itens[@i].ProdutoId" class="text-danger"></span>
                     </td>
-                    <td class="text-end">@Model.Itens[i].Preco.ToString("C2")</td>
+                    <td class="text-end preco-text">R$ 0,00</td>
                     <td class="text-end">
-                        <input class="form-control text-end quantidade" asp-for="Itens[@i].Quantidade" type="number" min="0" value="0" />
+                        <input class="form-control text-end quantidade" asp-for="Itens[@i].Quantidade" type="number" min="1" />
+                        <span asp-validation-for="Itens[@i].Quantidade" class="text-danger"></span>
                     </td>
                     <td class="text-end subtotal">R$ 0,00</td>
+                    <td class="text-end">
+                        <button type="button" class="btn btn-outline-danger btn-sm remover">Remover</button>
+                    </td>
+                    <input type="hidden" asp-for="Itens[@i].Preco" class="preco-input" value="0" />
                 </tr>
             }
         </tbody>
@@ -61,6 +79,7 @@
             <tr>
                 <th colspan="3" class="text-end">Total da venda:</th>
                 <th class="text-end" id="totalVenda">R$ 0,00</th>
+                <th></th>
             </tr>
         </tfoot>
     </table>
@@ -69,38 +88,116 @@
     <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Cancelar</a>
 </form>
 
+<template id="linha-template">
+    <tr>
+        <td>
+            <select name="Itens[__i__].ProdutoId" class="form-select produto-select">
+                @foreach (var opt in (SelectList)ViewBag.Produtos)
+                {
+                    <option value="@opt.Value">@opt.Text</option>
+                }
+            </select>
+        </td>
+        <td class="text-end preco-text">R$ 0,00</td>
+        <td class="text-end">
+            <input name="Itens[__i__].Quantidade" class="form-control text-end quantidade" type="number" min="1" value="1" />
+        </td>
+        <td class="text-end subtotal">R$ 0,00</td>
+        <td class="text-end">
+            <button type="button" class="btn btn-outline-danger btn-sm remover">Remover</button>
+        </td>
+        <input type="hidden" name="Itens[__i__].Preco" class="preco-input" value="0" />
+    </tr>
+</template>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+        const produtos = @Html.Raw(produtosJson);
         const fmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
-        function recalcular() {
+        function precoDoProduto(id) {
+            const p = produtos.find(x => x.Id === Number(id));
+            return p ? Number(p.Preco) : 0;
+        }
+
+        function recalcLinha(tr) {
+            const select = tr.querySelector('.produto-select');
+            const qtdEl = tr.querySelector('.quantidade');
+            const precoText = tr.querySelector('.preco-text');
+            const subtotalTd = tr.querySelector('.subtotal');
+            const precoHidden = tr.querySelector('.preco-input');
+
+            const preco = precoDoProduto(select.value);
+            const qtd = Math.max(1, parseInt(qtdEl.value || '1'));
+
+            precoText.textContent = fmt.format(preco);
+            precoHidden.value = preco.toString().replace('.', ','); // não é usado na regra, mas útil no postback
+            subtotalTd.textContent = fmt.format(preco * qtd);
+        }
+
+        function recalcTotal() {
             let total = 0;
-            document.querySelectorAll('tbody tr').forEach(tr => {
-                const preco = parseFloat(tr.querySelector('input[name$=".Preco"]').value.replace(',', '.'));
+            document.querySelectorAll('#tbodyItens tr').forEach(tr => {
+                const select = tr.querySelector('.produto-select');
                 const qtdEl = tr.querySelector('.quantidade');
-                const qtd = parseInt(qtdEl.value || '0');
-                const sub = (qtd * preco) || 0;
-                tr.querySelector('.subtotal').textContent = fmt.format(sub);
-                total += sub;
+                const preco = precoDoProduto(select.value);
+                const qtd = Math.max(1, parseInt(qtdEl.value || '1'));
+                total += (preco * qtd);
             });
             document.getElementById('totalVenda').textContent = fmt.format(total);
         }
 
-        document.querySelectorAll('.quantidade').forEach(el => {
-            el.addEventListener('input', recalcular);
+        function wireRow(tr) {
+            tr.querySelector('.produto-select').addEventListener('change', () => { recalcLinha(tr); recalcTotal(); });
+            tr.querySelector('.quantidade').addEventListener('input', () => { recalcLinha(tr); recalcTotal(); });
+            tr.querySelector('.remover').addEventListener('click', () => {
+                tr.remove();
+                recalcTotal();
+            });
+            recalcLinha(tr);
+        }
+
+        // Inicial: ligar eventos nas linhas renderizadas pelo servidor
+        document.querySelectorAll('#tbodyItens tr').forEach(wireRow);
+        recalcTotal();
+
+        // Adicionar nova linha a partir do template
+        document.getElementById('btnAdd').addEventListener('click', () => {
+            const template = document.getElementById('linha-template').innerHTML;
+            const index = document.querySelectorAll('#tbodyItens tr').length;
+            const html = template.replaceAll('__i__', index);
+            const tbody = document.getElementById('tbodyItens');
+            const wrapper = document.createElement('tbody');
+            wrapper.innerHTML = html.trim();
+            const tr = wrapper.querySelector('tr');
+            tbody.appendChild(tr);
+            wireRow(tr);
+            recalcTotal();
         });
 
         // Atualiza limite disponível ao trocar aluno
+        // document.getElementById('alunoSelect').addEventListener('change', async (e) => {
+        //     const alunoId = e.target.value;
+        //     if (!alunoId) return;
+        //     const resp = await fetch(`@Url.Action("LimiteDisponivel", "Vendas")?alunoId=${alunoId}`);
+        //     const data = await resp.json();
+        //     document.getElementById('limiteDisp').textContent = fmt.format(Number(data.disponivel));
+        // });
+        // Atualiza limite, consumido e disponível ao trocar aluno
         document.getElementById('alunoSelect').addEventListener('change', async (e) => {
             const alunoId = e.target.value;
             if (!alunoId) return;
-            const resp = await fetch(`@Url.Action("LimiteDisponivel", "Vendas")?alunoId=${alunoId}`);
+
+            const resp = await fetch(`@Url.Action("LimiteInfo", "Vendas")?alunoId=${alunoId}`);
             const data = await resp.json();
-            document.getElementById('limiteDisp').textContent = fmt.format(data.disponivel);
+
+            console.log(data);
+
+            document.getElementById('limiteResp').textContent = fmt.format(Number(data.limite));
+            document.getElementById('consumidoMes').textContent = fmt.format(Number(data.consumidoMes));
+            document.getElementById('limiteDisp').textContent = fmt.format(Number(data.disponivel));
         });
 
-        // cálculo inicial
-        recalcular();
     </script>
 }

@@ -19,21 +19,7 @@ namespace CantinaEscolar.Services
 
         public async Task<VendaViewModel> CarregarTelaAsync(int? alunoId = null)
         {
-            var vm = new VendaViewModel();
-
-            // Produtos disponíveis (carrega todos)
-            var produtos = await _db.Produtos
-                .OrderBy(p => p.Nome)
-                .Select(p => new VendaItemVM
-                {
-                    ProdutoId = p.Id,
-                    ProdutoNome = p.Nome,
-                    Preco = p.Preco,
-                    Quantidade = 0
-                })
-                .ToListAsync();
-
-            vm.Itens = produtos;
+            var vm = new VendaViewModel(); // NÃO preencher vm.Itens aqui
 
             if (alunoId.HasValue)
             {
@@ -58,8 +44,10 @@ namespace CantinaEscolar.Services
                 }
             }
 
+            // vm.Itens fica vazio; as linhas vêm do botão "Adicionar item"
             return vm;
         }
+
 
         public async Task<(bool ok, string mensagem)> EfetivarVendaAsync(VendaViewModel vm)
         {
