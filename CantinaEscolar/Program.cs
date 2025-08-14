@@ -29,15 +29,18 @@ static string ToNpgsql(string url)
     if (url.Contains("Host=", StringComparison.OrdinalIgnoreCase))
         return url;
 
-    var uri = new Uri(url); // aceita "postgres://" e "postgresql://"
+    var uri = new Uri(url); // aceita postgres:// e postgresql://
     var userInfo = uri.UserInfo.Split(':', 2);
     var user = Uri.UnescapeDataString(userInfo[0]);
     var pass = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
     var db = uri.AbsolutePath.Trim('/');
 
-    // Observação: se a URL tiver querystring (ex.: ?sslmode=require), você pode ler via uri.Query
-    // mas no Render exigimos TLS sempre:
-    return $"Host={uri.Host};Port={uri.Port};Database={db};Username={user};Password={pass};SSL Mode=Require;Trust Server Certificate=true";
+    var host = uri.Host;
+    // Se não houver porta na URL, use 5432
+    var port = uri.Port > 0 ? uri.Port : 5432;
+
+    // Render exige TLS; adicionamos SSL Mode
+    return $"Host={host};Port={port};Database={db};Username={user};Password={pass};SSL Mode=Require;Trust Server Certificate=true";
 }
 
 var npgsqlConn = ToNpgsql(rawUrl);
@@ -57,6 +60,10 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 // Services
 builder.Services.AddScoped<IVendaService, VendaService>();
+
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 
 var app = builder.Build();
 
