@@ -5,12 +5,16 @@ using CantinaEscolar.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
+
+// + para chamar o seeder
+using CantinaEscolar.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // MVC
 builder.Services.AddControllersWithViews();
 
-// (Opcional) comportamento de timestamp legado do Npgsql (evita warnings com DateTime)
+// (Opcional) comportamento de timestamp legado do Npgsql
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 // --- SOMENTE DATABASE_URL (sem fallback a appsettings) ---
@@ -25,7 +29,6 @@ if (string.IsNullOrWhiteSpace(rawUrl))
 // Converte postgres(ql)://user:pass@host:port/db -> Npgsql format
 static string ToNpgsql(string url)
 {
-    // Se já for formato Npgsql (Host=...;Port=...), retorna direto
     if (url.Contains("Host=", StringComparison.OrdinalIgnoreCase))
         return url;
 
@@ -36,10 +39,9 @@ static string ToNpgsql(string url)
     var db = uri.AbsolutePath.Trim('/');
 
     var host = uri.Host;
-    // Se não houver porta na URL, use 5432
     var port = uri.Port > 0 ? uri.Port : 5432;
 
-    // Render exige TLS; adicionamos SSL Mode
+    // TLS exigido no Render
     return $"Host={host};Port={port};Database={db};Username={user};Password={pass};SSL Mode=Require;Trust Server Certificate=true";
 }
 
@@ -49,9 +51,10 @@ var npgsqlConn = ToNpgsql(rawUrl);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(npgsqlConn));
 
-// Identity
+// Identity (+ tokens por padrão)
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -61,9 +64,9 @@ builder.Services.ConfigureApplicationCookie(options =>
 // Services
 builder.Services.AddScoped<IVendaService, VendaService>();
 
+// Porta do Render
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
-
 
 var app = builder.Build();
 
@@ -84,11 +87,18 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Aplica migrations no start (útil no Render)
+// --- MIGRATIONS + SEED (ASSÍNCRONO) ---
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
+    var services = scope.ServiceProvider;
+
+    var db = services.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync(); // cria/atualiza schema
+
+    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+    await IdentitySeeder.SeedAdminAsync(userManager, roleManager);
 }
+// --- FIM SEED ---
 
 app.Run();
