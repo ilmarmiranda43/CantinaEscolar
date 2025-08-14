@@ -1,8 +1,14 @@
 ﻿@model CantinaEscolar.ViewModels.VendaViewModel
 @using Microsoft.AspNetCore.Mvc.Rendering
+@using System.Linq
+
 @{
     ViewData["Title"] = "Registrar Venda";
     var produtosJson = (string)ViewBag.ProdutosJson;
+
+    // Detecta "perfil aluno": se só veio 1 item no SelectList de alunos
+    var alunosSelect = ViewBag.Alunos as SelectList;
+    var isAluno = alunosSelect != null && alunosSelect.Count() == 1;
 }
 
 <h2>Vendas</h2>
@@ -14,11 +20,22 @@
 
 <form asp-action="Create" method="post">
     <div class="mb-3">
-        <label asp-for="AlunoId" class="form-label"></label>
-        <select asp-for="AlunoId" class="form-select" asp-items="ViewBag.Alunos" id="alunoSelect">
-            <option value="">-- selecione um aluno --</option>
-        </select>
-        <span asp-validation-for="AlunoId" class="text-danger"></span>
+        <label class="form-label">Aluno</label>
+
+        @if (isAluno)
+        {
+            var unico = alunosSelect.First();
+            <div class="form-control-plaintext fw-semibold">@unico.Text</div>
+            <!-- fixa o aluno via hidden -->
+            <input type="hidden" asp-for="AlunoId" value="@unico.Value" />
+        }
+        else
+        {
+            <select asp-for="AlunoId" class="form-select" asp-items="ViewBag.Alunos" id="alunoSelect">
+                <option value="">-- selecione um aluno --</option>
+            </select>
+            <span asp-validation-for="AlunoId" class="text-danger"></span>
+        }
     </div>
 
     <div class="row mb-2">
@@ -92,6 +109,7 @@
     <tr>
         <td>
             <select name="Itens[__i__].ProdutoId" class="form-select produto-select">
+                <option value="" selected>-- selecione um produto --</option>
                 @foreach (var opt in (SelectList)ViewBag.Produtos)
                 {
                     <option value="@opt.Value">@opt.Text</option>
@@ -109,6 +127,7 @@
         <input type="hidden" name="Itens[__i__].Preco" class="preco-input" value="0" />
     </tr>
 </template>
+
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
@@ -132,7 +151,7 @@
             const qtd = Math.max(1, parseInt(qtdEl.value || '1'));
 
             precoText.textContent = fmt.format(preco);
-            precoHidden.value = preco.toString().replace('.', ','); // não é usado na regra, mas útil no postback
+            precoHidden.value = preco.toString().replace('.', ',');
             subtotalTd.textContent = fmt.format(preco * qtd);
         }
 
@@ -151,18 +170,15 @@
         function wireRow(tr) {
             tr.querySelector('.produto-select').addEventListener('change', () => { recalcLinha(tr); recalcTotal(); });
             tr.querySelector('.quantidade').addEventListener('input', () => { recalcLinha(tr); recalcTotal(); });
-            tr.querySelector('.remover').addEventListener('click', () => {
-                tr.remove();
-                recalcTotal();
-            });
+            tr.querySelector('.remover').addEventListener('click', () => { tr.remove(); recalcTotal(); });
             recalcLinha(tr);
         }
 
-        // Inicial: ligar eventos nas linhas renderizadas pelo servidor
+        // liga eventos nas linhas já renderizadas (ex.: pós-validação)
         document.querySelectorAll('#tbodyItens tr').forEach(wireRow);
         recalcTotal();
 
-        // Adicionar nova linha a partir do template
+        // botão adicionar item
         document.getElementById('btnAdd').addEventListener('click', () => {
             const template = document.getElementById('linha-template').innerHTML;
             const index = document.querySelectorAll('#tbodyItens tr').length;
@@ -176,28 +192,29 @@
             recalcTotal();
         });
 
-        // Atualiza limite disponível ao trocar aluno
-        // document.getElementById('alunoSelect').addEventListener('change', async (e) => {
-        //     const alunoId = e.target.value;
-        //     if (!alunoId) return;
-        //     const resp = await fetch(`@Url.Action("LimiteDisponivel", "Vendas")?alunoId=${alunoId}`);
-        //     const data = await resp.json();
-        //     document.getElementById('limiteDisp').textContent = fmt.format(Number(data.disponivel));
-        // });
-        // Atualiza limite, consumido e disponível ao trocar aluno
-        document.getElementById('alunoSelect').addEventListener('change', async (e) => {
-            const alunoId = e.target.value;
-            if (!alunoId) return;
-
+        async function carregarLimiteInfo(alunoId) {
             const resp = await fetch(`@Url.Action("LimiteInfo", "Vendas")?alunoId=${alunoId}`);
+            if (!resp.ok) return;
             const data = await resp.json();
-
-            console.log(data);
-
-            document.getElementById('limiteResp').textContent = fmt.format(Number(data.limite));
+            document.getElementById('limiteResp').textContent   = fmt.format(Number(data.limite));
             document.getElementById('consumidoMes').textContent = fmt.format(Number(data.consumidoMes));
-            document.getElementById('limiteDisp').textContent = fmt.format(Number(data.disponivel));
-        });
+            document.getElementById('limiteDisp').textContent   = fmt.format(Number(data.disponivel));
+        }
 
+        // Se existir o combo, escuta mudanças; se não existir (perfil aluno), lê o hidden e carrega
+        const alunoSelectEl = document.getElementById('alunoSelect');
+        if (alunoSelectEl) {
+            alunoSelectEl.addEventListener('change', async (e) => {
+                const alunoId = e.target.value;
+                if (!alunoId) return;
+                await carregarLimiteInfo(alunoId);
+            });
+        } else {
+            // perfil aluno: busca o hidden gerado pelo asp-for="AlunoId"
+            const hiddenAlunoIdEl = document.querySelector('input[name="AlunoId"]');
+            if (hiddenAlunoIdEl && hiddenAlunoIdEl.value) {
+                carregarLimiteInfo(hiddenAlunoIdEl.value);
+            }
+        }
     </script>
 }

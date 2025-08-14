@@ -39,6 +39,13 @@ namespace CantinaEscolar.Data
                 .HasForeignKey(vi => vi.ProdutoId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Aluno (N:1) -> ApplicationUser
+            modelBuilder.Entity<Aluno>()
+                .HasOne(a => a.ApplicationUser)
+                .WithMany() // sem coleção no ApplicationUser
+                .HasForeignKey(a => a.ApplicationUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             // Precisões decimais (se preferir garantir via Fluent API também)
             modelBuilder.Entity<Produto>().Property(p => p.Preco).HasColumnType("decimal(18,2)");
             modelBuilder.Entity<Venda>().Property(v => v.Total).HasColumnType("decimal(18,2)");

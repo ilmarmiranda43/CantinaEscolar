@@ -1,36 +1,50 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using CantinaEscolar.Data;
+using CantinaEscolar.Models;
+using CantinaEscolar.Services;
+using CantinaEscolar.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using CantinaEscolar.Data;
-using CantinaEscolar.Services;
-using CantinaEscolar.ViewModels;
-using System.Text.Json;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace CantinaEscolar.Controllers
 {
+    [Authorize]
     public class VendasController : Controller
     {
         private readonly ApplicationDbContext _db;
         private readonly IVendaService _service;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public VendasController(ApplicationDbContext db, IVendaService service)
+        public VendasController(ApplicationDbContext db, IVendaService service, UserManager<ApplicationUser> userManager)
         {
-            _db = db;
-            _service = service;
+            _db = db; _service = service; _userManager = userManager;
+        }
+
+        private async Task<int?> GetAlunoIdDoUsuarioAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return null;
+            var aluno = await _db.Alunos.Where(a => a.ApplicationUserId == user.Id)
+                                        .Select(a => new { a.Id })
+                                        .FirstOrDefaultAsync();
+            return aluno?.Id;
         }
 
         [HttpGet]
         public async Task<IActionResult> Create(int? alunoId)
         {
+            // Se for aluno, força o AlunoId do usuário
+            var meuAlunoId = await GetAlunoIdDoUsuarioAsync();
+            if (meuAlunoId.HasValue) alunoId = meuAlunoId;
+
             var vm = await _service.CarregarTelaAsync(alunoId);
-
-            // Começamos com 1 linha vazia (com Quantidade 1)
-            //vm.Itens = new List<VendaItemVM> { new VendaItemVM { Quantidade = 1 } };
-
-            await CarregarCombosAsync(vm.AlunoId);
+            await CarregarCombosAsync(alunoId); // abaixo ajustamos para entregar só o próprio aluno
             return View(vm);
         }
 
@@ -38,6 +52,10 @@ namespace CantinaEscolar.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(VendaViewModel vm, string? addItem, int? removeItem)
         {
+            // Força o AlunoId se for aluno
+            var meuAlunoId = await GetAlunoIdDoUsuarioAsync();
+            if (meuAlunoId.HasValue) vm.AlunoId = (int)meuAlunoId;
+
             // Adicionar linha vazia
             if (!string.IsNullOrEmpty(addItem))
             {
@@ -101,7 +119,11 @@ namespace CantinaEscolar.Controllers
         [HttpGet]
         public async Task<IActionResult> LimiteInfo(int alunoId)
         {
-            Console.Write("Entrou na função LimiteInfo");
+            
+            // Bloqueia acesso a aluno alheio
+            var meuAlunoId = await GetAlunoIdDoUsuarioAsync();
+            if (meuAlunoId.HasValue && alunoId != meuAlunoId.Value)
+                return Forbid();
 
             var aluno = await _db.Alunos
                 .Include(a => a.Responsavel)
@@ -129,17 +151,23 @@ namespace CantinaEscolar.Controllers
 
         private async Task CarregarCombosAsync(int? alunoIdSelecionado)
         {
-            ViewBag.Alunos = new SelectList(await _db.Alunos.OrderBy(a => a.Nome).ToListAsync(), "Id", "Nome", alunoIdSelecionado);
+            // Se é aluno, só carrega o próprio
+            var meuAlunoId = await GetAlunoIdDoUsuarioAsync();
+            if (meuAlunoId.HasValue)
+            {
+                var meuAluno = await _db.Alunos.Where(a => a.Id == meuAlunoId.Value)
+                                               .OrderBy(a => a.Nome)
+                                               .ToListAsync();
+                ViewBag.Alunos = new SelectList(meuAluno, "Id", "Nome", meuAlunoId.Value);
+            }
+            else
+            {
+                ViewBag.Alunos = new SelectList(await _db.Alunos.OrderBy(a => a.Nome).ToListAsync(), "Id", "Nome", alunoIdSelecionado);
+            }
 
-            var produtos = await _db.Produtos
-                .OrderBy(p => p.Nome)
-                .Select(p => new { p.Id, p.Nome, p.Preco })
-                .ToListAsync();
-
+            var produtos = await _db.Produtos.OrderBy(p => p.Nome).Select(p => new { p.Id, p.Nome, p.Preco }).ToListAsync();
             ViewBag.Produtos = new SelectList(produtos, "Id", "Nome");
-
-            // JSON para JS conseguir pegar o preço pelo id do produto
-            ViewBag.ProdutosJson = JsonSerializer.Serialize(produtos);
+            ViewBag.ProdutosJson = System.Text.Json.JsonSerializer.Serialize(produtos); // use camelCase se seu JS espera
         }
     }
 }
