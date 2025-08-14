@@ -1,41 +1,30 @@
-# ===== STAGE: base (runtime) =====
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-WORKDIR /app
-
-# Kestrel ouvindo na 8080 por padrão (pode ser sobrescrito por ASPNETCORE_URLS no deploy)
-ENV ASPNETCORE_URLS=http://+:8080
-
-# Expor apenas a porta HTTP padrão
-EXPOSE 8080
-
-# (Opcional) criar usuário não-root para rodar a app
-RUN adduser --disabled-password --gecos "" appuser \
-    && chown -R appuser /app
-USER appuser
-
-# ===== STAGE: build =====
+# ===== Etapa 1: Build + Restore + Publish =====
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
-# Copia só o csproj e restaura (cache mais eficiente)
-COPY CantinaEscolar/CantinaEscolar.csproj CantinaEscolar/
-RUN dotnet restore "CantinaEscolar/CantinaEscolar.csproj"
+# Copia só os .csproj primeiro (melhora cache)
+COPY CantinaEscolar/*.csproj CantinaEscolar/
+# Se existir uma .sln na raiz, copie também (opcional)
+# COPY *.sln ./
 
-# Copia o restante do código
+# Restore com caminho explícito do projeto
+RUN dotnet restore CantinaEscolar/CantinaEscolar.csproj
+
+# Agora copia todo o repo
 COPY . .
 
-# Compila
-WORKDIR /src/CantinaEscolar
-RUN dotnet build "CantinaEscolar.csproj" -c $BUILD_CONFIGURATION -o /app/build
+# Publica direto (não use BUILD_CONFIGURATION; fixe Release)
+RUN dotnet publish CantinaEscolar/CantinaEscolar.csproj -c Release -o /app --no-restore
 
-# ===== STAGE: publish =====
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "CantinaEscolar.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
-
-# ===== STAGE: final =====
-FROM base AS final
+# ===== Etapa 2: Runtime =====
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
-COPY --from=publish /app/publish ./
+
+# Render injeta a porta em $PORT
+ENV ASPNETCORE_URLS=http://0.0.0.0:${PORT}
+
+# Copia artefatos publicados
+COPY --from=build /app ./
+
+# Se o nome do projeto é "CantinaEscolar", o DLL padrão é CantinaEscolar.dll
 ENTRYPOINT ["dotnet", "CantinaEscolar.dll"]
