@@ -1,47 +1,75 @@
+using System;
 using CantinaEscolar.Data;
 using CantinaEscolar.Models;
 using CantinaEscolar.Services;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-
 using Microsoft.EntityFrameworkCore;
-
-using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// MVC
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// (Opcional) comportamento de timestamp legado do Npgsql (evita warnings com DateTime)
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
+// --- SOMENTE DATABASE_URL (sem fallback a appsettings) ---
+var rawUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+if (string.IsNullOrWhiteSpace(rawUrl))
+{
+    throw new InvalidOperationException(
+        "DATABASE_URL não definida. Defina a URL do Postgres do Render em Environment Variables."
+    );
+}
+
+// Converte postgres(ql)://user:pass@host:port/db -> Npgsql format
+static string ToNpgsql(string url)
+{
+    // Se já for formato Npgsql (Host=...;Port=...), retorna direto
+    if (url.Contains("Host=", StringComparison.OrdinalIgnoreCase))
+        return url;
+
+    var uri = new Uri(url); // aceita "postgres://" e "postgresql://"
+    var userInfo = uri.UserInfo.Split(':', 2);
+    var user = Uri.UnescapeDataString(userInfo[0]);
+    var pass = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+    var db = uri.AbsolutePath.Trim('/');
+
+    // Observação: se a URL tiver querystring (ex.: ?sslmode=require), você pode ler via uri.Query
+    // mas no Render exigimos TLS sempre:
+    return $"Host={uri.Host};Port={uri.Port};Database={db};Username={user};Password={pass};SSL Mode=Require;Trust Server Certificate=true";
+}
+
+var npgsqlConn = ToNpgsql(rawUrl);
+
+// DbContext com Npgsql
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(npgsqlConn));
+
+// Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.LoginPath = "/Account/Login"; // ou o caminho correto do seu controller de login
+    options.LoginPath = "/Account/Login";
 });
 
-// REGISTRO DO SERVICE DE VENDAS
+// Services
 builder.Services.AddScoped<IVendaService, VendaService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
-//app.UseHttpsRedirection();
+// app.UseHttpsRedirection(); // habilite se publicar atrás de HTTPS
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -49,12 +77,11 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-//using (var scope = app.Services.CreateScope())
-//{
-//    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-//    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-//    await IdentitySeeder.SeedAdmin(userManager, roleManager);
-//}
+// Aplica migrations no start (útil no Render)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
 
 app.Run();
