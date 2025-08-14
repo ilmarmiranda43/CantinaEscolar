@@ -21,9 +21,13 @@ body {
   margin-bottom: 60px;
 }
 
-/* Imagem responsiva (sem Bootstrap) */
+/* Imagem responsiva e centralizada */
 .responsive-img {
-    display: block;
+    display: block; /* vira bloco para aceitar margin auto */
     max-width: 100%;
     height: auto;
+    margin-left: auto; /* centraliza horizontalmente */
+    margin-right: auto;
+    /* caso tenha algum float herdado */
+    float: none;
 }

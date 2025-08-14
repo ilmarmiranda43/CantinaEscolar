@@ -5,6 +5,8 @@ using CantinaEscolar.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
+using Microsoft.AspNetCore.DataProtection;
+using System.IO;
 
 // + para chamar o seeder
 using CantinaEscolar.Infrastructure;
@@ -67,6 +69,10 @@ builder.Services.AddScoped<IVendaService, VendaService>();
 // Porta do Render
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
+    .SetApplicationName("CantinaEscolar");
 
 var app = builder.Build();
 

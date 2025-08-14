@@ -20,6 +20,12 @@ RUN dotnet publish CantinaEscolar/CantinaEscolar.csproj -c Release -o /app --no-
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
+# Cria a pasta para as chaves de Data Protection e dá permissão ao usuário "app"
+# (o aspnet:8.0 roda como usuário não-root "app" por padrão)
+USER root
+RUN mkdir -p /app/keys && chown -R app:app /app/keys
+USER app
+
 # Render injeta a porta em $PORT
 ENV ASPNETCORE_URLS=http://0.0.0.0:${PORT}
 
@@ -28,3 +34,4 @@ COPY --from=build /app ./
 
 # Se o nome do projeto é "CantinaEscolar", o DLL padrão é CantinaEscolar.dll
 ENTRYPOINT ["dotnet", "CantinaEscolar.dll"]
+
