@@ -1,5 +1,11 @@
 ﻿@model IEnumerable<CantinaEscolar.Controllers.SaldoPorAlunoVM>
 
+@using System.Globalization
+
+@{
+    var br = new CultureInfo("pt-BR");
+}
+
 @{
     ViewData["Title"] = "Saldo por Aluno";
 }
@@ -43,9 +49,9 @@
                             <td>@item.Aluno</td>
                             <td>@item.Responsavel</td>
                             <td>@item.Serie</td>
-                            <td class="text-end">@item.Limite.ToString("C")</td>
-                            <td class="text-end">@item.ConsumidoMes.ToString("C")</td>
-                            <td class="text-end fw-bold">@item.Disponivel.ToString("C")</td>
+                            <td class="text-end">@item.Limite.ToString("C", br)</td>
+                            <td class="text-end">@item.ConsumidoMes.ToString("C", br)</td>
+                            <td class="text-end fw-bold">@item.Disponivel.ToString("C", br)</td>
 
                             <td class="text-center">
                                 <a asp-controller="Relatorios"
@@ -63,9 +69,9 @@
                 <tfoot class="table-secondary">
                     <tr>
                         <th colspan="4">Totais</th>
-                        <th class="text-end">@Model.Sum(a => a.Limite).ToString("C")</th>
-                        <th class="text-end">@Model.Sum(a => a.ConsumidoMes).ToString("C")</th>
-                        <th class="text-end">@Model.Sum(a => a.Disponivel).ToString("C")</th>
+                        <th class="text-end">@Model.Sum(a => a.Limite).ToString("C", br)</th>
+                        <th class="text-end">@Model.Sum(a => a.ConsumidoMes).ToString("C", br)</th>
+                        <th class="text-end">@Model.Sum(a => a.Disponivel).ToString("C", br)</th>
                     </tr>
                 </tfoot>
             </table>
