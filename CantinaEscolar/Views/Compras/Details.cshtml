@@ -1,5 +1,11 @@
 ﻿@model CantinaEscolar.Models.Compra
 
+@using System.Globalization
+
+@{
+    var br = new CultureInfo("pt-BR");
+}
+
 @{
     ViewData["Title"] = "Detalhes da Compra";
 }
@@ -18,7 +24,7 @@
                 <dd class="col-sm-9">@Model.Aluno?.Nome</dd>
 
                 <dt class="col-sm-3">Valor Total</dt>
-                <dd class="col-sm-9 fw-bold">@Model.ValorTotal.ToString("C")</dd>
+                <dd class="col-sm-9 fw-bold">@Model.ValorTotal.ToString("C", br)</dd>
             </dl>
 
             @if (Model.Itens != null && Model.Itens.Any())
@@ -40,8 +46,8 @@
                             <tr>
                                 <td>@item.Produto?.Nome</td>
                                 <td class="text-end">@item.Quantidade</td>
-                                <td class="text-end">@item.PrecoUnitario.ToString("C")</td>
-                                <td class="text-end">@((item.Quantidade * item.PrecoUnitario).ToString("C"))</td>
+                                <td class="text-end">@item.PrecoUnitario.ToString("C", br)</td>
+                                <td class="text-end">@((item.Quantidade * item.PrecoUnitario).ToString("C", br))</td>
                             </tr>
                         }
                     </tbody>
