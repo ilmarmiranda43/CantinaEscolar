@@ -6,6 +6,7 @@ COPY *.csproj ./
 RUN dotnet restore
 
 COPY . .
+RUN rm -f global.json
 RUN dotnet publish -c Release -o /app --no-restore
 
 # ===== Etapa 2: Runtime =====
