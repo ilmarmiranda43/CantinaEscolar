@@ -27,6 +27,7 @@ namespace CantinaEscolar.Controllers
                 .OrderBy(a => a.Nome)
                 .Select(a => new SaldoPorAlunoVM
                 {
+                    AlunoId = a.Id,
                     Aluno = a.Nome,
                     Responsavel = a.Responsavel.Nome,
                     Serie = a.Serie,
