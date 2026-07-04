@@ -5,40 +5,60 @@
 }
 
 <div class="container mt-4">
+
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h2 class="mb-1">Relatório de Saldo por Aluno</h2>
-            <p class="text-muted mb-0">Consulta dos saldos disponíveis por aluno.</p>
+            <h2>Relatório de Saldo por Aluno</h2>
+            <p class="text-muted mb-0">
+                Consulta dos saldos disponíveis dos alunos cadastrados.
+            </p>
         </div>
 
-        <a asp-controller="Relatorios" asp-action="Index" class="btn btn-outline-secondary">
-            Voltar
+        <a asp-controller="Home"
+           asp-action="Index"
+           class="btn btn-secondary">
+            Voltar para início
         </a>
     </div>
 
-    <div class="card shadow-sm">
+    <div class="card shadow">
         <div class="card-body">
+
             <table class="table table-striped table-hover align-middle">
                 <thead class="table-primary">
                     <tr>
                         <th>Aluno</th>
                         <th>Responsável</th>
+                        <th>Série</th>
                         <th class="text-end">Saldo Disponível</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     @foreach (var aluno in Model)
                     {
                         <tr>
                             <td>@aluno.Nome</td>
                             <td>@aluno.Responsavel?.Nome</td>
+                            <td>@aluno.Serie</td>
                             <td class="text-end fw-bold">
                                 @aluno.ValorDisponivel.ToString("C")
                             </td>
                         </tr>
                     }
                 </tbody>
+
+                <tfoot class="table-secondary">
+                    <tr>
+                        <th colspan="3">Saldo Total</th>
+                        <th class="text-end">
+                            @Model.Sum(a => a.ValorDisponivel).ToString("C")
+                        </th>
+                    </tr>
+                </tfoot>
             </table>
+
         </div>
     </div>
+
 </div>
