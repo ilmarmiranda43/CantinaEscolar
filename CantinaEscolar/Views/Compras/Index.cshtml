@@ -1,4 +1,11 @@
 ﻿@model IEnumerable<CantinaEscolar.Models.Compra>
+
+@using System.Globalization
+
+@{
+    var br = new CultureInfo("pt-BR");
+}
+
 @{
     ViewData["Title"] = "Compras";
 }
@@ -20,7 +27,7 @@
             <tr>
                 <td>@item.Data.ToString("dd/MM/yyyy HH:mm")</td>
                 <td>@item.Aluno?.Nome</td>
-                <td class="text-end">@item.ValorTotal.ToString("C2")</td>
+                <td class="text-end">@item.ValorTotal.ToString("C2", br)</td>
                 <td>
                     <a asp-action="Details" asp-route-id="@item.Id">Detalhes</a> |
                     @* <a asp-action="Edit" asp-route-id="@item.Id">Editar</a> |
