@@ -1,21 +1,44 @@
-﻿@model List<Aluno>
+﻿@model IEnumerable<CantinaEscolar.Models.Aluno>
 
-<table>
-    <thead>
-        <tr>
-            <th>Aluno</th>
-            <th>Responsável</th>
-            <th>Saldo Disponível</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var aluno in Model)
-        {
-            <tr>
-                <td>@aluno.Nome</td>
-                <td>@aluno.Responsavel.Nome</td>
-                <td>@aluno.ValorDisponivel.ToString("C")</td>
-            </tr>
-        }
-    </tbody>
-</table>
+@{
+    ViewData["Title"] = "Saldo por Aluno";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-1">Relatório de Saldo por Aluno</h2>
+            <p class="text-muted mb-0">Consulta dos saldos disponíveis por aluno.</p>
+        </div>
+
+        <a asp-controller="Relatorios" asp-action="Index" class="btn btn-outline-secondary">
+            Voltar
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Aluno</th>
+                        <th>Responsável</th>
+                        <th class="text-end">Saldo Disponível</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var aluno in Model)
+                    {
+                        <tr>
+                            <td>@aluno.Nome</td>
+                            <td>@aluno.Responsavel?.Nome</td>
+                            <td class="text-end fw-bold">
+                                @aluno.ValorDisponivel.ToString("C")
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
