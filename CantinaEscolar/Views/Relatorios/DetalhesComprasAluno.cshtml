@@ -1,0 +1,68 @@
+﻿@model IEnumerable<CantinaEscolar.Models.Compra>
+
+@{
+    ViewData["Title"] = "Compras do Aluno";
+    var aluno = ViewBag.Aluno as CantinaEscolar.Models.Aluno;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2>Compras de @aluno?.Nome</h2>
+            <p class="text-muted mb-0">Histórico de compras realizadas pelo aluno.</p>
+        </div>
+
+        <a asp-controller="Relatorios"
+           asp-action="SaldoPorAluno"
+           class="btn btn-secondary">
+            Voltar
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Data</th>
+                        <th>Aluno</th>
+                        <th>Itens</th>
+                        <th class="text-end">Valor Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var compra in Model)
+                    {
+                        <tr>
+                            <td>@compra.Data.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@compra.Aluno?.Nome</td>
+                            <td>
+                                @if (compra.Itens != null && compra.Itens.Any())
+                                {
+                                    foreach (var item in compra.Itens)
+                                    {
+                                        <div>
+                                            @item.Produto?.Nome -
+                                            @item.Quantidade x @item.PrecoUnitario.ToString("C")
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Sem itens</span>
+                                }
+                            </td>
+                            <td class="text-end fw-bold">@compra.ValorTotal.ToString("C")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="table-secondary">
+                    <tr>
+                        <th colspan="3">Total consumido</th>
+                        <th class="text-end">@Model.Sum(c => c.ValorTotal).ToString("C")</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>

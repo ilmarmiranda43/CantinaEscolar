@@ -46,11 +46,34 @@ namespace CantinaEscolar.Controllers
 
             return View(alunos);
         }
+
+        public async Task<IActionResult> DetalhesComprasAluno(int alunoId)
+        {
+            var aluno = await _context.Alunos
+                .Include(a => a.Responsavel)
+                .FirstOrDefaultAsync(a => a.Id == alunoId);
+
+            if (aluno == null)
+                return NotFound();
+
+            var compras = await _context.Compras
+                .Include(c => c.Aluno)
+                .Include(c => c.Itens)
+                    .ThenInclude(i => i.Produto)
+                .Where(c => c.AlunoId == alunoId)
+                .OrderByDescending(c => c.Data)
+                .ToListAsync();
+
+            ViewBag.Aluno = aluno;
+
+            return View(compras);
+        }
     }
 
     public class SaldoPorAlunoVM
     {
         public string Aluno { get; set; } = string.Empty;
+        public int AlunoId { get; set; }
         public string Responsavel { get; set; } = string.Empty;
         public string Serie { get; set; } = string.Empty;
         public decimal Limite { get; set; }
