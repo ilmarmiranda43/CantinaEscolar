@@ -1,16 +1,15 @@
-﻿@model IEnumerable<CantinaEscolar.Models.Aluno>
+﻿@model IEnumerable<CantinaEscolar.Controllers.SaldoPorAlunoVM>
 
 @{
     ViewData["Title"] = "Saldo por Aluno";
 }
 
 <div class="container mt-4">
-
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h2>Relatório de Saldo por Aluno</h2>
             <p class="text-muted mb-0">
-                Consulta dos saldos disponíveis dos alunos cadastrados.
+                Consulta dos saldos disponíveis no mês atual.
             </p>
         </div>
 
@@ -30,35 +29,36 @@
                         <th>Aluno</th>
                         <th>Responsável</th>
                         <th>Série</th>
-                        <th class="text-end">Saldo Disponível</th>
+                        <th class="text-end">Limite</th>
+                        <th class="text-end">Consumido no Mês</th>
+                        <th class="text-end">Disponível</th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    @foreach (var aluno in Model)
+                    @foreach (var item in Model)
                     {
                         <tr>
-                            <td>@aluno.Nome</td>
-                            <td>@aluno.Responsavel?.Nome</td>
-                            <td>@aluno.Serie</td>
-                            <td class="text-end fw-bold">
-                                @aluno.ValorDisponivel.ToString("C")
-                            </td>
+                            <td>@item.Aluno</td>
+                            <td>@item.Responsavel</td>
+                            <td>@item.Serie</td>
+                            <td class="text-end">@item.Limite.ToString("C")</td>
+                            <td class="text-end">@item.ConsumidoMes.ToString("C")</td>
+                            <td class="text-end fw-bold">@item.Disponivel.ToString("C")</td>
                         </tr>
                     }
                 </tbody>
 
                 <tfoot class="table-secondary">
                     <tr>
-                        <th colspan="3">Saldo Total</th>
-                        <th class="text-end">
-                            @Model.Sum(a => a.ValorDisponivel).ToString("C")
-                        </th>
+                        <th colspan="3">Totais</th>
+                        <th class="text-end">@Model.Sum(a => a.Limite).ToString("C")</th>
+                        <th class="text-end">@Model.Sum(a => a.ConsumidoMes).ToString("C")</th>
+                        <th class="text-end">@Model.Sum(a => a.Disponivel).ToString("C")</th>
                     </tr>
                 </tfoot>
             </table>
 
         </div>
     </div>
-
 </div>
