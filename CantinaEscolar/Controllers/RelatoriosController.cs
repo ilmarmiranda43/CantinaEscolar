@@ -13,9 +13,17 @@ namespace CantinaEscolar.Controllers
             _context = context;
         }
 
+        public IActionResult Index()
+        {
+            return RedirectToAction(nameof(SaldoPorAluno));
+        }
+
         public async Task<IActionResult> SaldoPorAluno()
         {
-            var alunos = await _context.Alunos.Include(a => a.Responsavel).ToListAsync();
+            var alunos = await _context.Alunos
+                .Include(a => a.Responsavel)
+                .ToListAsync();
+
             return View(alunos);
         }
     }

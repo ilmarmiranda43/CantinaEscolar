@@ -1,0 +1,42 @@
+﻿@{
+    ViewData["Title"] = "Relatórios";
+}
+
+<div class="container mt-4">
+    <h2>Relatórios</h2>
+    <hr />
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Saldo por Aluno</h5>
+                    <p class="card-text">
+                        Visualize o saldo atual de todos os alunos cadastrados.
+                    </p>
+                    <a asp-controller="Relatorios"
+                       asp-action="SaldoPorAluno"
+                       class="btn btn-primary">
+                        Abrir Relatório
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Futuros relatórios -->
+        <!--
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Vendas por Período</h5>
+                    <a asp-controller="Relatorios"
+                       asp-action="VendasPorPeriodo"
+                       class="btn btn-primary">
+                        Abrir Relatório
+                    </a>
+                </div>
+            </div>
+        </div>
+        -->
+    </div>
+</div>
