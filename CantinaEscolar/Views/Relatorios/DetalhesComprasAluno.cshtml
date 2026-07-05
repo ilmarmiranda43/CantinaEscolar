@@ -1,5 +1,11 @@
 ﻿@model IEnumerable<CantinaEscolar.Models.Compra>
 
+@using System.Globalization
+
+@{
+    var br = new CultureInfo("pt-BR");
+}
+
 @{
     ViewData["Title"] = "Compras do Aluno";
     var aluno = ViewBag.Aluno as CantinaEscolar.Models.Aluno;
@@ -43,7 +49,7 @@
                                     {
                                         <div>
                                             @item.Produto?.Nome -
-                                            @item.Quantidade x @item.PrecoUnitario.ToString("C")
+                                            @item.Quantidade x @item.PrecoUnitario.ToString("C", br)
                                         </div>
                                     }
                                 }
@@ -52,14 +58,14 @@
                                     <span class="text-muted">Sem itens</span>
                                 }
                             </td>
-                            <td class="text-end fw-bold">@compra.ValorTotal.ToString("C")</td>
+                            <td class="text-end fw-bold">@compra.ValorTotal.ToString("C", br)</td>
                         </tr>
                     }
                 </tbody>
                 <tfoot class="table-secondary">
                     <tr>
                         <th colspan="3">Total consumido</th>
-                        <th class="text-end">@Model.Sum(c => c.ValorTotal).ToString("C")</th>
+                        <th class="text-end">@Model.Sum(c => c.ValorTotal).ToString("C", br)</th>
                     </tr>
                 </tfoot>
             </table>
